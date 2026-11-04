@@ -1,0 +1,64 @@
+# Enterprise Multi-Agent Spec-Driven Software Factory Configuration
+project:
+  name: "agentic-software-factory"
+  root_problem_id: "PROB-001"
+  specs_dir: "specs"
+  features_dir: "specs/features"
+  tasks_dir: "specs/tasks"
+  graph_db_path: ".factory/factory_graph.db"
+  graph_json_export: "specs/graph/traceability.json"
+  graph_mermaid_export: "specs/graph/traceability.mmd"
+
+kanban:
+  provider: "trello" # Supports "trello" (REST/MCP) or "local" (file-backed offline Kanban)
+  local_state_file: ".factory/local_kanban.json"
+  columns:
+    backlog: "1. Problem & Spec Backlog"
+    need_decision: "2. Need Decision"
+    human_decision: "3. Human Decision"
+    ready_for_dev: "4. Ready for Dev (Spec Locked)"
+    in_progress: "5. In Progress (pi Coding)"
+    pr_review: "6. PR & Security Review (agy)"
+    done: "7. Done / Verified"
+    issues: "Issues & Security Findings"
+  mandatory_card_sections:
+    - "## 1. Problem Context & Goal"
+    - "## 2. System Analysis & Enterprise Design"
+    - "## 3. Acceptance Criteria (Gherkin Reference)"
+    - "## 4. Open Questions / Need Decision"
+    - "## 5. Human Decision"
+
+agents:
+  planner_reviewer:
+    engine: "agy"
+    model: "gemini-4-argon"
+    max_review_cycles: 3
+  coder:
+    engine: "pi"
+    binary: "/home/aimet/.local/bin/pi"
+    worktree_base_dir: "worktrees"
+    max_iterations_per_task: 3
+    read_only_paths:
+      - "specs"
+      - "factory.yaml"
+    scrubbed_env_vars:
+      - "TRELLO_API_KEY"
+      - "TRELLO_TOKEN"
+      - "GITHUB_TOKEN"
+      - "GH_TOKEN"
+      - "gitlab_token"
+      - "AWS_SECRET_ACCESS_KEY"
+      - "GOOGLE_APPLICATION_CREDENTIALS"
+
+bdd:
+  default_adapter: "pytest-bdd"
+  adapters:
+    pytest-bdd:
+      command: "uv run pytest -q"
+      report_json: "reports/cucumber.json"
+    cucumber-js:
+      command: "npx cucumber-js --format json:reports/cucumber.json"
+      report_json: "reports/cucumber.json"
+    godog:
+      command: "godog --format=cucumber > reports/cucumber.json"
+      report_json: "reports/cucumber.json"

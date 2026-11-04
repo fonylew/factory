@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Factory runtime & isolated worktrees (untrusted / transient)
+.factory/
+worktrees/
+*.db-shm
+*.db-wal
+factory_graph.db
+
+# Secrets & Environment variables
+.env
+.env.*
+!.env.example
+
+# Test & coverage reports
+.pytest_cache/
+reports/
+htmlcov/
+.coverage

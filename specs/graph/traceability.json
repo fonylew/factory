@@ -1,0 +1,396 @@
+{
+  "@context": {
+    "@vocab": "https://antigravity.google/schemas/software-factory/v1#",
+    "nodes": "@graph"
+  },
+  "edges": [
+    {
+      "edge_type": "MODIFIES_SPEC",
+      "metadata": {},
+      "source_id": "ADR-001",
+      "target_id": "SPEC-001"
+    },
+    {
+      "edge_type": "IMPLEMENTED_BY",
+      "metadata": {},
+      "source_id": "FEAT-001",
+      "target_id": "CODE-001"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "FEAT-001",
+      "target_id": "TASK-001"
+    },
+    {
+      "edge_type": "IMPLEMENTED_BY",
+      "metadata": {},
+      "source_id": "FEAT-002",
+      "target_id": "CODE-002"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "FEAT-002",
+      "target_id": "TASK-001"
+    },
+    {
+      "edge_type": "IMPLEMENTED_BY",
+      "metadata": {},
+      "source_id": "FEAT-003",
+      "target_id": "CODE-003"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "FEAT-003",
+      "target_id": "TASK-001"
+    },
+    {
+      "edge_type": "IMPLEMENTED_BY",
+      "metadata": {},
+      "source_id": "FEAT-004",
+      "target_id": "CODE-004"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "FEAT-004",
+      "target_id": "TASK-001"
+    },
+    {
+      "edge_type": "IMPLEMENTED_BY",
+      "metadata": {},
+      "source_id": "FEAT-005",
+      "target_id": "CODE-005"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "FEAT-005",
+      "target_id": "TASK-001"
+    },
+    {
+      "edge_type": "IMPLEMENTED_BY",
+      "metadata": {},
+      "source_id": "FEAT-006",
+      "target_id": "CODE-006"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "FEAT-006",
+      "target_id": "TASK-001"
+    },
+    {
+      "edge_type": "GOVERNED_BY",
+      "metadata": {},
+      "source_id": "PROB-001",
+      "target_id": "ADR-001"
+    },
+    {
+      "edge_type": "SOLVED_BY",
+      "metadata": {},
+      "source_id": "PROB-001",
+      "target_id": "SPEC-001"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "PROB-001",
+      "target_id": "TASK-001"
+    },
+    {
+      "edge_type": "SPECIFIED_BY",
+      "metadata": {},
+      "source_id": "SPEC-001",
+      "target_id": "FEAT-001"
+    },
+    {
+      "edge_type": "SPECIFIED_BY",
+      "metadata": {},
+      "source_id": "SPEC-001",
+      "target_id": "FEAT-002"
+    },
+    {
+      "edge_type": "SPECIFIED_BY",
+      "metadata": {},
+      "source_id": "SPEC-001",
+      "target_id": "FEAT-003"
+    },
+    {
+      "edge_type": "SPECIFIED_BY",
+      "metadata": {},
+      "source_id": "SPEC-001",
+      "target_id": "FEAT-004"
+    },
+    {
+      "edge_type": "SPECIFIED_BY",
+      "metadata": {},
+      "source_id": "SPEC-001",
+      "target_id": "FEAT-005"
+    },
+    {
+      "edge_type": "SPECIFIED_BY",
+      "metadata": {},
+      "source_id": "SPEC-001",
+      "target_id": "FEAT-006"
+    }
+  ],
+  "nodes": [
+    {
+      "chosen_option": "SQLite+NetworkX Graph, 7-Column Trello State Machine, Git Worktrees for pi, Gemini 4 Argon for agy",
+      "created_at": "2026-11-04T04:19:14.331312+00:00",
+      "decided_by": "Technical Lead / System Analyst",
+      "id": "ADR-001",
+      "metadata": {},
+      "node_type": "DecisionNode",
+      "options": [],
+      "problem_id": "PROB-001",
+      "question": "Core architecture for Graph, Trello Kanban, Worktree isolation, BDD, and Task Ledgers",
+      "rationale": "Zero-ops ACID traceability with strict privilege separation between planning/review and coding.",
+      "status": "ACTIVE",
+      "title": "Foundational Architecture Decisions for Spec-Driven Software Factory",
+      "trello_card_id": "CARD-TASK-001"
+    },
+    {
+      "commit_sha": "",
+      "created_at": "2026-11-04T04:19:14.339003+00:00",
+      "feature_id": "FEAT-001",
+      "file_path": "src/factory/graph/validator.py",
+      "git_branch": "feat/FEAT-001",
+      "id": "CODE-001",
+      "metadata": {},
+      "node_type": "CodeArtifactNode",
+      "pr_number": 1,
+      "status": "ACTIVE",
+      "symbol_name": "GraphValidator",
+      "title": "GraphValidator (src/factory/graph/validator.py)"
+    },
+    {
+      "commit_sha": "",
+      "created_at": "2026-11-04T04:19:14.342896+00:00",
+      "feature_id": "FEAT-002",
+      "file_path": "src/factory/graph/store.py",
+      "git_branch": "feat/FEAT-002",
+      "id": "CODE-002",
+      "metadata": {},
+      "node_type": "CodeArtifactNode",
+      "pr_number": 2,
+      "status": "ACTIVE",
+      "symbol_name": "TraceabilityGraphStore",
+      "title": "TraceabilityGraphStore (src/factory/graph/store.py)"
+    },
+    {
+      "commit_sha": "",
+      "created_at": "2026-11-04T04:19:14.346687+00:00",
+      "feature_id": "FEAT-003",
+      "file_path": "src/factory/kanban/state_machine.py",
+      "git_branch": "feat/FEAT-003",
+      "id": "CODE-003",
+      "metadata": {},
+      "node_type": "CodeArtifactNode",
+      "pr_number": 3,
+      "status": "ACTIVE",
+      "symbol_name": "KanbanStateMachine",
+      "title": "KanbanStateMachine (src/factory/kanban/state_machine.py)"
+    },
+    {
+      "commit_sha": "",
+      "created_at": "2026-11-04T04:19:14.350529+00:00",
+      "feature_id": "FEAT-004",
+      "file_path": "src/factory/git_ops/worktree.py",
+      "git_branch": "feat/FEAT-004",
+      "id": "CODE-004",
+      "metadata": {},
+      "node_type": "CodeArtifactNode",
+      "pr_number": 4,
+      "status": "ACTIVE",
+      "symbol_name": "WorktreeManager",
+      "title": "WorktreeManager (src/factory/git_ops/worktree.py)"
+    },
+    {
+      "commit_sha": "",
+      "created_at": "2026-11-04T04:19:14.354696+00:00",
+      "feature_id": "FEAT-005",
+      "file_path": "src/factory/analyzer/security_scanner.py",
+      "git_branch": "feat/FEAT-005",
+      "id": "CODE-005",
+      "metadata": {},
+      "node_type": "CodeArtifactNode",
+      "pr_number": 5,
+      "status": "ACTIVE",
+      "symbol_name": "EnterpriseSecurityAndProdAnalyzer",
+      "title": "EnterpriseSecurityAndProdAnalyzer (src/factory/analyzer/security_scanner.py)"
+    },
+    {
+      "commit_sha": "",
+      "created_at": "2026-11-04T04:19:14.358618+00:00",
+      "feature_id": "FEAT-006",
+      "file_path": "src/factory/journal/task_ledger.py",
+      "git_branch": "feat/FEAT-006",
+      "id": "CODE-006",
+      "metadata": {},
+      "node_type": "CodeArtifactNode",
+      "pr_number": 6,
+      "status": "ACTIVE",
+      "symbol_name": "TaskLedgerManager",
+      "title": "TaskLedgerManager (src/factory/journal/task_ledger.py)"
+    },
+    {
+      "created_at": "2026-11-04T04:19:14.336854+00:00",
+      "feature_file_path": "specs/features/FEAT-001-grill-me-spec-anchor.feature",
+      "id": "FEAT-001",
+      "metadata": {},
+      "node_type": "FeatureNode",
+      "scenarios": [
+        "Rejecting an orphan feature specification without a Problem Statement link",
+        "Locking a Gherkin specification with a SHA-256 checksum before coding begins"
+      ],
+      "spec_checksum": "cb420d76b4d57d1cd48223c027b74b2aa4ee5fde8b2a3afb70b115dbf8302b37",
+      "spec_id": "SPEC-001",
+      "status": "DONE_VERIFIED",
+      "title": "Grill-Me Problem Discovery and Immutable Spec Anchoring",
+      "trello_card_id": "CARD-FEAT-001"
+    },
+    {
+      "created_at": "2026-11-04T04:19:14.340744+00:00",
+      "feature_file_path": "specs/features/FEAT-002-traceability-graph.feature",
+      "id": "FEAT-002",
+      "metadata": {},
+      "node_type": "FeatureNode",
+      "scenarios": [
+        "Exporting the Traceability Graph to deterministic JSON-LD and Mermaid formats",
+        "Computing downstream blast radius when a System Spec changes"
+      ],
+      "spec_checksum": "971932c584e93711d7237d859d93b683ffb719015b283cc3412471bd5b18d58c",
+      "spec_id": "SPEC-001",
+      "status": "DONE_VERIFIED",
+      "title": "Traceability Graph Traversal, Impact Analysis, and Deterministic Export",
+      "trello_card_id": "CARD-FEAT-002"
+    },
+    {
+      "created_at": "2026-11-04T04:19:14.344530+00:00",
+      "feature_file_path": "specs/features/FEAT-003-trello-kanban-hitl.feature",
+      "id": "FEAT-003",
+      "metadata": {},
+      "node_type": "FeatureNode",
+      "scenarios": [
+        "Blocking transition to Ready for Dev when System Analysis or Acceptance Criteria are missing",
+        "Pausing in Need Decision and resuming after an authorized Human Decision"
+      ],
+      "spec_checksum": "45bd28d0252ab7c11f6b22dd53b48e1389326a6368f5f97b0afe73af6a26b11b",
+      "spec_id": "SPEC-001",
+      "status": "DONE_VERIFIED",
+      "title": "Trello Kanban State Machine and Human-in-the-Loop Decision Flow",
+      "trello_card_id": "CARD-FEAT-003"
+    },
+    {
+      "created_at": "2026-11-04T04:19:14.348415+00:00",
+      "feature_file_path": "specs/features/FEAT-004-git-worktree-pi-sandbox.feature",
+      "id": "FEAT-004",
+      "metadata": {},
+      "node_type": "FeatureNode",
+      "scenarios": [
+        "Creating an isolated Git worktree with scrubbed secrets and read-only specs",
+        "Detecting Gherkin specification tampering and blocking Pull Request creation"
+      ],
+      "spec_checksum": "cd0acaff788c283e38ac0d249c551d8a0db5147754442257655c5f4e7b3c0033",
+      "spec_id": "SPEC-001",
+      "status": "DONE_VERIFIED",
+      "title": "Isolated Git Worktree Execution and Spec Tamper Prevention for pi",
+      "trello_card_id": "CARD-FEAT-004"
+    },
+    {
+      "created_at": "2026-11-04T04:19:14.352498+00:00",
+      "feature_file_path": "specs/features/FEAT-005-agy-security-pr-review.feature",
+      "id": "FEAT-005",
+      "metadata": {},
+      "node_type": "FeatureNode",
+      "scenarios": [
+        "Detecting a production risk and security flaw in a Pull Request diff"
+      ],
+      "spec_checksum": "be0e4f660cd0278e774e897f9f3627b7fac7d380c9ad07d6066ef35e8437a2d1",
+      "spec_id": "SPEC-001",
+      "status": "DONE_VERIFIED",
+      "title": "Automated PR Review, Security Analysis, and Dual-Track Issue Tracking by agy",
+      "trello_card_id": "CARD-FEAT-005"
+    },
+    {
+      "created_at": "2026-11-04T04:19:14.356492+00:00",
+      "feature_file_path": "specs/features/FEAT-006-task-ledger-journal.feature",
+      "id": "FEAT-006",
+      "metadata": {},
+      "node_type": "FeatureNode",
+      "scenarios": [
+        "Initializing a Task Ledger and recording step outputs with secret redaction"
+      ],
+      "spec_checksum": "c7444206a3e485c96d9c5fa2feb5b62890fef6534815a46f5b7b8ecc3c02dd9e",
+      "spec_id": "SPEC-001",
+      "status": "DONE_VERIFIED",
+      "title": "Step-by-Step Task Conversation and Design Ledger Tracking",
+      "trello_card_id": "CARD-FEAT-006"
+    },
+    {
+      "business_impact": "Eliminates unreviewed security flaws and specification drift in agentic delivery.",
+      "created_at": "2026-11-04T04:19:14.330543+00:00",
+      "id": "PROB-001",
+      "invariants": [
+        "INV-01: Every FeatureNode and CodeArtifactNode must link to an active ProblemNode.",
+        "INV-02: Coding agents (pi) cannot modify specs/ or .feature files.",
+        "INV-03: Coding agents (pi) run in isolated Git worktrees without secrets.",
+        "INV-04: Trello cards require System Analysis, Design, and Gherkin AC.",
+        "INV-05: Every PR is audited by agy (Gemini 4 Argon) for STRIDE & production risks.",
+        "INV-06: Every task maintains a step-by-step markdown journal in specs/tasks/."
+      ],
+      "metadata": {},
+      "node_type": "ProblemNode",
+      "statement": "Prevent coding agent drift, test tampering, and security/production flaws by enforcing a Traceability Graph, immutable Gherkin specifications, Trello HITL decisions, and role separation.",
+      "status": "ACTIVE",
+      "title": "Enterprise Multi-Agent Spec-Driven Software Delivery Without Drift or Security Erosion"
+    },
+    {
+      "architecture_md": "specs/architecture/SPEC-001-core-factory.md",
+      "component": "factory-core",
+      "created_at": "2026-11-04T04:19:14.333051+00:00",
+      "id": "SPEC-001",
+      "metadata": {},
+      "nfrs": [
+        "Explicit timeouts on all external HTTP calls",
+        "SQLite WAL concurrency and deterministic JSON-LD/Mermaid exports",
+        "Max 3 coding iterations circuit breaker"
+      ],
+      "node_type": "SystemSpecNode",
+      "problem_id": "PROB-001",
+      "security_constraints": [
+        "STRIDE threat mitigation",
+        "Secret redaction on Trello & Task Ledgers",
+        "POSIX read-only + SHA-256 tamper guard on specs/"
+      ],
+      "status": "ACTIVE",
+      "title": "Core Enterprise Multi-Agent Software Factory Specification",
+      "version_hash": "2b0c1d17abfc95b08d9ce6d7ded243968d66693a34cb9afa6540333fcbfcb455"
+    },
+    {
+      "created_at": "2026-11-04T04:19:14.335119+00:00",
+      "date": "2026-11-01",
+      "description": "Grill-Me Problem Discovery, Enterprise Architecture Design, and Self-Hosting Foundation",
+      "id": "TASK-001",
+      "journal_dir": "specs/tasks/2026-11-01_TASK-001_factory-foundation",
+      "metadata": {},
+      "node_type": "TaskJournalNode",
+      "problem_id": "PROB-001",
+      "status": "ACTIVE",
+      "steps_completed": [
+        "01-grill-me-conversation.md",
+        "02-system-analysis-design.md",
+        "03-human-decisions-adr.md",
+        "04-pi-execution-summary.md",
+        "05-agy-security-pr-review.md"
+      ],
+      "task_id": "TASK-001",
+      "title": "TASK-001: Multi-Agent Spec-Driven Software Factory Foundation",
+      "trello_card_id": "CARD-TASK-001"
+    }
+  ]
+}

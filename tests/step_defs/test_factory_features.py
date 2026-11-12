@@ -12,21 +12,29 @@ from pytest_bdd import given, parsers, scenarios, then, when
 from factory.agents.agy_driver import AgyReviewDriver
 from factory.analyzer.issue_tracker import DualTrackIssueTracker
 from factory.analyzer.security_scanner import EnterpriseSecurityAndProdAnalyzer
+from factory.formal.code_model import ExecutableLeanCodeModeler
+from factory.formal.gatekeeper import FormalGatekeeper
+from factory.formal.prover_team import ProverTeamCoordinator
+from factory.formal.spec_pipeline import FormalSpecPipeline
 from factory.git_ops.pr_manager import PullRequestManager
 from factory.git_ops.worktree import SpecTamperError, WorktreeManager
 from factory.graph.models import (
     CodeArtifactNode,
+    CodeModelNode,
     DecisionNode,
     FeatureNode,
+    FormalSpecNode,
     IssueCategory,
     IssueNode,
     IssueSeverity,
     ProblemNode,
     SystemSpecNode,
     TaskJournalNode,
+    TheoremProofNode,
 )
 from factory.graph.store import TraceabilityGraphStore
 from factory.graph.validator import GraphValidationError, GraphValidator
+from factory.installer import FactorySkillInstaller
 from factory.journal.task_ledger import TaskLedgerManager
 from factory.kanban.card_parser import CardParser
 from factory.kanban.state_machine import KanbanStateMachine, KanbanTransitionError
@@ -41,6 +49,8 @@ scenarios(str(FEATURES_DIR / "FEAT-003-trello-kanban-hitl.feature"))
 scenarios(str(FEATURES_DIR / "FEAT-004-git-worktree-pi-sandbox.feature"))
 scenarios(str(FEATURES_DIR / "FEAT-005-agy-security-pr-review.feature"))
 scenarios(str(FEATURES_DIR / "FEAT-006-task-ledger-journal.feature"))
+scenarios(str(FEATURES_DIR / "FEAT-007-agent-skill-and-trello-linking.feature"))
+scenarios(str(FEATURES_DIR / "FEAT-008-formal-verification-framework.feature"))
 
 
 @pytest.fixture
@@ -789,3 +799,421 @@ def then_task_journal_node_registered(ctx: Dict[str, Any], task_id: str) -> None
     assert isinstance(node, TaskJournalNode)
     assert "01-grill-me-conversation.md" in node.steps_completed
     assert "02-system-analysis-design.md" in node.steps_completed
+
+
+# ============================================================================
+# FEAT-007 Steps (Installable Factory Skill & Atomic Task-to-Trello Linking)
+# ============================================================================
+
+
+@given("a temporary agent configuration directory")
+def given_temp_agent_config_dir(ctx: Dict[str, Any]) -> None:
+    ctx["gemini_config_dir"] = ctx["tmp_path"] / "gemini_config"
+    ctx["agents_skills_dir"] = ctx["tmp_path"] / "agents_skills"
+
+
+@when("the factory skill installer executes setup for the agent configuration directory")
+def when_run_skill_installer(ctx: Dict[str, Any]) -> None:
+    installer = FactorySkillInstaller(REPO_ROOT)
+    ctx["install_report"] = installer.setup_agent_environment(
+        gemini_config_dir=ctx["gemini_config_dir"],
+        agents_skills_dir=ctx["agents_skills_dir"],
+        use_symlinks=False,
+    )
+
+
+@then(
+    parsers.parse(
+        'the skills "{s1}", "{s2}", and "{s3}" are installed in the skills directory'
+    )
+)
+def then_skills_installed(ctx: Dict[str, Any], s1: str, s2: str, s3: str) -> None:
+    skills_dir = ctx["gemini_config_dir"] / "skills"
+    for name in (s1, s2, s3):
+        skill_md = skills_dir / name / "SKILL.md"
+        assert skill_md.exists(), f"Missing {skill_md}"
+
+
+@then(
+    parsers.parse(
+        'the MCP configuration file registers the "{server_name}" server'
+    )
+)
+def then_mcp_config_registered(ctx: Dict[str, Any], server_name: str) -> None:
+    import json
+
+    mcp_file = ctx["gemini_config_dir"] / "mcp_config.json"
+    assert mcp_file.exists()
+    data = json.loads(mcp_file.read_text(encoding="utf-8"))
+    assert server_name in data.get("mcpServers", {})
+
+
+@given("an initialized Trello Kanban board with all 8 mandatory factory lists")
+def given_initialized_trello_board_8_lists(ctx: Dict[str, Any]) -> None:
+    adapter = LocalKanbanAdapter(ctx["tmp_path"] / "trello_board.json")
+    lists_map = adapter.init_board_lists()
+    assert len(lists_map) == 8
+    ctx["kanban_adapter"] = adapter
+    ctx["tasks_dir"] = ctx["tmp_path"] / "specs" / "tasks"
+    ctx["features_dir"] = ctx["tmp_path"] / "specs" / "features"
+    ctx["ledger"] = TaskLedgerManager(
+        tasks_base_dir=ctx["tasks_dir"],
+        graph_store=ctx["store"],
+    )
+
+
+@when(
+    parsers.parse(
+        'an agent initializes and links task "{task_id}" and feature "{feat_id}" titled "{title}" on date "{date_str}"'
+    )
+)
+def when_agent_initializes_and_links_task(
+    ctx: Dict[str, Any],
+    task_id: str,
+    feat_id: str,
+    title: str,
+    date_str: str,
+) -> None:
+    ledger: TaskLedgerManager = ctx["ledger"]
+    res = ledger.create_and_link_task_with_trello(
+        task_id=task_id,
+        feature_id=feat_id,
+        title=title,
+        problem_context="Ensure zero-trust validation on all incoming requests.",
+        system_design="Validate JWT signature, issuer, audience, and expiry with 5s timeout.",
+        scenarios=["Rejecting expired tokens", "Accepting valid tokens"],
+        features_dir=ctx["features_dir"],
+        kanban_adapter=ctx["kanban_adapter"],
+        date_str=date_str,
+        problem_id="PROB-001",
+        spec_id="SPEC-001",
+    )
+    ctx["create_link_result"] = res
+
+
+@then(
+    parsers.parse(
+        'the task folder "{folder_name}" contains a "README.md" linked to Trello card "{card_id}"'
+    )
+)
+def then_task_folder_linked_to_card(
+    ctx: Dict[str, Any], folder_name: str, card_id: str
+) -> None:
+    readme = ctx["tasks_dir"] / folder_name / "README.md"
+    assert readme.exists()
+    content = readme.read_text(encoding="utf-8")
+    assert f'trello_card_id: "{card_id}"' in content
+
+
+@then(
+    parsers.parse(
+        'FeatureNode "{feat_id}" and TaskJournalNode "{task_id}" are linked to "{card_id}" in the Traceability Graph'
+    )
+)
+def then_graph_nodes_linked_to_card(
+    ctx: Dict[str, Any], feat_id: str, task_id: str, card_id: str
+) -> None:
+    store: TraceabilityGraphStore = ctx["store"]
+    fnode = store.get_node(feat_id)
+    tnode = store.get_node(task_id)
+    assert isinstance(fnode, FeatureNode)
+    assert isinstance(tnode, TaskJournalNode)
+    assert fnode.trello_card_id == card_id
+    assert tnode.trello_card_id == card_id
+
+
+@then(
+    parsers.parse(
+        'the Trello Kanban board has card "{feat_id}" in column "{col_name}" with complete System Analysis and Acceptance Criteria'
+    )
+)
+def then_kanban_card_has_analysis_and_ac(
+    ctx: Dict[str, Any], feat_id: str, col_name: str
+) -> None:
+    adapter: LocalKanbanAdapter = ctx["kanban_adapter"]
+    card = adapter.get_card(feat_id)
+    assert card is not None
+    assert card.column == col_name
+    parser = CardParser()
+    assert parser.validate_card_description(card.description) == []
+
+
+# ============================================================================
+# FEAT-008 Steps (Agentic Formal Verification Framework & Gatekeeper)
+# ============================================================================
+
+
+@given("an initialized Formal Verification Pipeline, Kanban State Machine, and Traceability Graph")
+def init_formal_verification_stack(ctx: Dict[str, Any]) -> None:
+    store = TraceabilityGraphStore(":memory:")
+    store.upsert_node(ProblemNode(id="PROB-001", title="Root Problem"))
+    store.upsert_node(SystemSpecNode(id="SPEC-001", title="Core Spec", problem_id="PROB-001"))
+    store.upsert_node(FeatureNode(id="FEAT-008", title="Formal Verification Feature", spec_id="SPEC-001"))
+
+    adapter = LocalKanbanAdapter(ctx["tmp_path"] / "formal_kanban.json")
+    adapter.init_board_lists()
+    desc = CardParser.render_card_template(
+        feature_id="FEAT-008",
+        title="Formal Verification Feature",
+        problem_id="PROB-001",
+        spec_id="SPEC-001",
+        problem_context="Mathematically verify constant-time ratchet step.",
+        system_design="3-stage Lean 4 formal verification with trusted processor model and Gatekeeper.",
+        feature_file_path="specs/features/FEAT-008-formal-verification-framework.feature",
+        scenarios=["Drafting Lean spec", "Lifting Rust code", "Gatekeeper proof check"],
+    )
+    adapter.upsert_card(
+        KanbanCard(
+            card_id="CARD-FEAT-008",
+            feature_id="FEAT-008",
+            title="[FEAT-008] Formal Verification Feature",
+            description=desc,
+            column="1. Problem & Spec Backlog",
+        )
+    )
+    sm = KanbanStateMachine(adapter=adapter, graph_store=store)
+    formal_dir = ctx["tmp_path"] / "specs" / "formal"
+
+    ctx["store"] = store
+    ctx["kanban_adapter"] = adapter
+    ctx["kanban_sm"] = sm
+    ctx["formal_dir"] = formal_dir
+    ctx["spec_pipeline"] = FormalSpecPipeline(
+        formal_specs_dir=formal_dir,
+        graph_store=store,
+        kanban_sm=sm,
+    )
+    ctx["code_modeler"] = ExecutableLeanCodeModeler(
+        formal_specs_dir=formal_dir,
+        graph_store=store,
+    )
+    ctx["gatekeeper"] = FormalGatekeeper(lean_binary=None)
+
+
+@given(
+    parsers.parse(
+        'research paper reference "{paper_ref}" for feature "{feat_id}"'
+    )
+)
+def given_paper_reference(ctx: Dict[str, Any], paper_ref: str, feat_id: str) -> None:
+    ctx["paper_ref"] = paper_ref
+    ctx["formal_feat_id"] = feat_id
+
+
+@when(
+    parsers.parse(
+        'the untrusted Spec-writer and Reviewer agents draft Lean spec "{fspec_id}" with obligation "{obligation}"'
+    )
+)
+def when_draft_lean_spec(
+    ctx: Dict[str, Any], fspec_id: str, obligation: str
+) -> None:
+    pipeline: FormalSpecPipeline = ctx["spec_pipeline"]
+    node = pipeline.draft_lean_spec(
+        formal_spec_id=fspec_id,
+        feature_id=ctx["formal_feat_id"],
+        title=f"Lean Spec {fspec_id}",
+        paper_references=[ctx["paper_ref"]],
+        theorem_obligations=[obligation],
+    )
+    ctx["fspec_node"] = node
+
+
+@then(
+    parsers.parse(
+        'FormalSpecNode "{fspec_id}" is marked untrusted and card "{feat_id}" waits in "{expected_col}"'
+    )
+)
+def then_fspec_untrusted_and_card_waiting(
+    ctx: Dict[str, Any], fspec_id: str, feat_id: str, expected_col: str
+) -> None:
+    store: TraceabilityGraphStore = ctx["store"]
+    node = store.get_node(fspec_id)
+    assert isinstance(node, FormalSpecNode)
+    assert node.trusted is False
+    card = ctx["kanban_adapter"].get_card(feat_id)
+    assert card is not None
+    assert card.column == expected_col
+
+
+@when(
+    parsers.parse(
+        'authorized user "{member}" approves Lean spec "{fspec_id}" via Human Decision'
+    )
+)
+def when_human_approves_lean_spec(
+    ctx: Dict[str, Any], member: str, fspec_id: str
+) -> None:
+    pipeline: FormalSpecPipeline = ctx["spec_pipeline"]
+    pipeline.approve_and_lock_spec(formal_spec_id=fspec_id, approved_by=member)
+
+
+@then(
+    parsers.parse(
+        'FormalSpecNode "{fspec_id}" becomes trusted with a locked 64-character SHA-256 checksum'
+    )
+)
+def then_fspec_trusted_and_locked(ctx: Dict[str, Any], fspec_id: str) -> None:
+    store: TraceabilityGraphStore = ctx["store"]
+    node = store.get_node(fspec_id)
+    assert isinstance(node, FormalSpecNode)
+    assert node.trusted is True
+    assert len(node.spec_sha256) == 64
+
+
+@given(
+    parsers.parse(
+        'Rust source code for "{feat_id}" implementing a constant-time word comparison'
+    )
+)
+def given_rust_source_code(ctx: Dict[str, Any], feat_id: str) -> None:
+    rust_file = ctx["tmp_path"] / "ratchet_ct.rs"
+    rust_file.write_text(
+        "pub fn ct_eq_u64(a: u64, b: u64) -> u64 {\n"
+        "    let diff = a ^ b;\n"
+        "    ((diff | diff.wrapping_neg()) >> 63) ^ 1\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    ctx["rust_source_file"] = rust_file
+    ctx["formal_feat_id"] = feat_id
+
+
+@when(
+    parsers.parse(
+        'the Executable Lean Code Modeler compiles and lifts the Rust code for "{feat_id}"'
+    )
+)
+def when_lift_rust_code(ctx: Dict[str, Any], feat_id: str) -> None:
+    modeler: ExecutableLeanCodeModeler = ctx["code_modeler"]
+    cmod = modeler.lift_source_to_lean_model(
+        code_model_id="CMOD-008",
+        feature_id=feat_id,
+        source_path=ctx["rust_source_file"],
+        source_language="rust",
+    )
+    ctx["cmod_node"] = cmod
+
+
+@then(
+    parsers.parse(
+        'a trusted CodeModelNode "{cmod_id}" is registered with compiled machine instructions and a Lean processor state model'
+    )
+)
+def then_cmod_registered_with_processor_model(
+    ctx: Dict[str, Any], cmod_id: str
+) -> None:
+    store: TraceabilityGraphStore = ctx["store"]
+    node = store.get_node(cmod_id)
+    assert isinstance(node, CodeModelNode)
+    assert node.trusted is True
+    assert len(node.model_sha256) == 64
+    model_txt = Path(node.lean_model_path).read_text(encoding="utf-8")
+    assert "structure ProcessorState" in model_txt
+    assert "def compiledMachineCode" in model_txt
+    assert "def runCompiledCode" in model_txt
+
+
+@given(
+    parsers.parse(
+        'trusted FormalSpecNode "{fspec_id}" and trusted CodeModelNode "{cmod_id}" for "{feat_id}"'
+    )
+)
+def given_trusted_fspec_and_cmod(
+    ctx: Dict[str, Any], fspec_id: str, cmod_id: str, feat_id: str
+) -> None:
+    pipeline: FormalSpecPipeline = ctx["spec_pipeline"]
+    pipeline.draft_lean_spec(
+        formal_spec_id=fspec_id,
+        feature_id=feat_id,
+        title="Trusted Ratchet Spec",
+        paper_references=["Signal PQXDH v1"],
+        theorem_obligations=["constant_time_ratchet_step"],
+    )
+    fspec = pipeline.approve_and_lock_spec(fspec_id, approved_by="tech_lead_01")
+
+    rust_file = ctx["tmp_path"] / "ratchet.rs"
+    rust_file.write_text("pub fn ratchet(x: u64) -> u64 { x }\n", encoding="utf-8")
+    cmod = ctx["code_modeler"].lift_source_to_lean_model(
+        code_model_id=cmod_id,
+        feature_id=feat_id,
+        source_path=rust_file,
+        source_language="rust",
+    )
+    ctx["fspec_node"] = fspec
+    ctx["cmod_node"] = cmod
+
+
+@when(
+    parsers.parse(
+        'the Prover Team submits an initial candidate proof containing "{bad_tok}" and a subsequent sound proof for "{obligation}"'
+    )
+)
+def when_prover_team_runs_two_rounds(
+    ctx: Dict[str, Any], bad_tok: str, obligation: str
+) -> None:
+    coord = ProverTeamCoordinator(
+        proofs_base_dir=ctx["tmp_path"] / "proofs",
+        gatekeeper=ctx["gatekeeper"],
+        graph_store=ctx["store"],
+        max_proof_rounds=3,
+    )
+
+    def mock_prover_team(round_idx: int, _diagnostics: list[str]) -> str:
+        if round_idx == 1:
+            return (
+                f"namespace FactoryFormal.FEAT_008\n"
+                f"theorem {obligation} (s : Nat) : {obligation}_prop s s := by\n"
+                f"  {bad_tok}\n"
+                f"end FactoryFormal.FEAT_008\n"
+            )
+        return (
+            f"-- Round 2: Fixed after Gatekeeper rejected escape hatch\n"
+            f"namespace FactoryFormal.FEAT_008\n"
+            f"theorem {obligation} (s : Nat) : {obligation}_prop s s := by\n"
+            f"  rfl\n"
+            f"end FactoryFormal.FEAT_008\n"
+        )
+
+    res = coord.run_prover_loop(
+        theorem_proof_id="THM-008",
+        formal_spec=ctx["fspec_node"],
+        code_model=ctx["cmod_node"],
+        candidate_generator=mock_prover_team,
+    )
+    ctx["prover_result"] = res
+
+
+@then(
+    parsers.parse(
+        'the Gatekeeper rejects round 1 due to forbidden escape hatch "{bad_tok}" and accepts round 2'
+    )
+)
+def then_gatekeeper_rejects_round1_accepts_round2(
+    ctx: Dict[str, Any], bad_tok: str
+) -> None:
+    res = ctx["prover_result"]
+    assert res.rounds_used == 2
+    assert res.verdict_history[0].passed is False
+    assert bad_tok in res.verdict_history[0].forbidden_constructs_found
+    assert res.verdict_history[1].passed is True
+    assert res.final_verdict.status == "VERIFIED"
+
+
+@then(
+    parsers.parse(
+        'a verified TheoremProofNode "{thm_id}" is linked to "{fspec_id}" and "{cmod_id}" in the Traceability Graph'
+    )
+)
+def then_theorem_proof_node_linked(
+    ctx: Dict[str, Any], thm_id: str, fspec_id: str, cmod_id: str
+) -> None:
+    store: TraceabilityGraphStore = ctx["store"]
+    node = store.get_node(thm_id)
+    assert isinstance(node, TheoremProofNode)
+    assert node.gatekeeper_status == "VERIFIED"
+    g = store.to_networkx()
+    assert g.has_edge(fspec_id, thm_id)
+    assert g.has_edge(cmod_id, thm_id)
+
+

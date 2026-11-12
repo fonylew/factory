@@ -1,14 +1,19 @@
-"""Step-by-Step Task Conversation & Design Ledger Manager with Secret Redaction."""
+"""Step-by-Step Task Conversation & Design Ledger Manager with Secret Redaction & Atomic Trello Linking."""
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
 import re
-from typing import List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from factory.graph.models import EdgeType, TaskJournalNode
+from factory.graph.models import EdgeType, FeatureNode, ProblemNode, SystemSpecNode, TaskJournalNode
 from factory.graph.store import TraceabilityGraphStore
+from factory.graph.validator import GraphValidator
+
+if TYPE_CHECKING:
+    from factory.kanban.card_parser import CardParser
+    from factory.kanban.trello_client import LocalKanbanAdapter
 
 
 class SecretRedactor:
@@ -45,7 +50,7 @@ class SecretRedactor:
 
 
 class TaskLedgerManager:
-    """Manages `specs/tasks/<YYYY-MM-DD>_<TASK-ID>_<slug>/` step-by-step markdown ledgers."""
+    """Manages `specs/tasks/<YYYY-MM-DD>_<TASK-ID>_<slug>/` step-by-step markdown ledgers and Trello links."""
 
     def __init__(self, tasks_base_dir: Path, graph_store: Optional[TraceabilityGraphStore] = None) -> None:
         self.tasks_base_dir = Path(tasks_base_dir)
@@ -70,6 +75,7 @@ class TaskLedgerManager:
         spec_id: str = "SPEC-001",
         feature_ids: Optional[List[str]] = None,
         trello_card_id: Optional[str] = None,
+        trello_card_url: Optional[str] = None,
     ) -> Path:
         date_val = date_str or datetime.now(timezone.utc).strftime("%Y-%m-%d")
         folder_name = self.get_task_folder_name(task_id, date_val, description)
@@ -78,6 +84,7 @@ class TaskLedgerManager:
 
         features_list = feature_ids or []
         features_yaml = "\n".join(f'  - "{fid}"' for fid in features_list) or "  []"
+        card_url = trello_card_url or (f"https://trello.com/c/{trello_card_id}" if trello_card_id else "")
 
         readme_path = task_dir / "README.md"
         safe_desc = SecretRedactor.sanitize(description)
@@ -90,6 +97,7 @@ spec_id: "{spec_id}"
 features:
 {features_yaml}
 trello_card_id: "{trello_card_id or ''}"
+trello_card_url: "{card_url}"
 status: "IN_PROGRESS"
 ---
 
@@ -101,6 +109,8 @@ status: "IN_PROGRESS"
 - **Description**: {safe_desc}
 - **Problem Anchor**: `{problem_id}`
 - **System Spec**: `{spec_id}`
+- **Trello Card ID**: `{trello_card_id or 'UNLINKED'}`
+- **Trello Card URL**: {card_url or 'N/A'}
 
 ## Step Execution Ledger
 """
@@ -117,6 +127,7 @@ status: "IN_PROGRESS"
                 problem_id=problem_id,
                 steps_completed=[],
                 trello_card_id=trello_card_id,
+                metadata={"trello_card_url": card_url},
             )
             self.graph_store.upsert_node(node)
             for fid in features_list:
@@ -124,6 +135,167 @@ status: "IN_PROGRESS"
                     self.graph_store.add_edge(fid, task_id, EdgeType.LOGGED_IN)
 
         return task_dir
+
+    def create_and_link_task_with_trello(
+        self,
+        task_id: str,
+        feature_id: str,
+        title: str,
+        problem_context: str,
+        system_design: str,
+        scenarios: List[str],
+        features_dir: Path,
+        kanban_adapter: "LocalKanbanAdapter",
+        target_column: str = "4. Ready for Dev (Spec Locked)",
+        date_str: Optional[str] = None,
+        problem_id: str = "PROB-001",
+        spec_id: str = "SPEC-001",
+    ) -> Dict[str, Any]:
+        """Atomically creates the Task Ledger, Gherkin `.feature` file, Graph nodes, and linked Trello Card."""
+        from factory.kanban.card_parser import CardParser
+        from factory.kanban.trello_client import KanbanCard, TrelloKanbanAdapter
+
+        slug = self.slugify(title)
+        features_dir = Path(features_dir)
+        features_dir.mkdir(parents=True, exist_ok=True)
+        feat_file = features_dir / f"{feature_id}-{slug}.feature"
+        if not feat_file.exists():
+            scenario_blocks = "\n\n".join(
+                f"  Scenario: {sc}\n    Given the {feature_id} subsystem is initialized\n    When {sc.lower()}\n    Then the acceptance criteria for {feature_id} are satisfied"
+                for sc in (scenarios or [f"Verify {title}"])
+            )
+            feat_file.write_text(
+                f"@{problem_id} @{spec_id} @{feature_id}\n"
+                f"Feature: {title}\n"
+                f"  As a Technical Lead or System Analyst\n"
+                f"  I want {title}\n"
+                f"  So that {problem_context}\n\n"
+                f"{scenario_blocks}\n",
+                encoding="utf-8",
+            )
+
+        checksum = GraphValidator.compute_file_sha256(feat_file)
+        card_id = f"CARD-{feature_id}"
+
+        if self.graph_store is not None:
+            if not self.graph_store.get_node(problem_id):
+                self.graph_store.upsert_node(
+                    ProblemNode(id=problem_id, title=f"Root Problem {problem_id}")
+                )
+            if not self.graph_store.get_node(spec_id):
+                self.graph_store.upsert_node(
+                    SystemSpecNode(id=spec_id, title=f"System Spec {spec_id}", problem_id=problem_id)
+                )
+            feat_node = FeatureNode(
+                id=feature_id,
+                title=title,
+                spec_id=spec_id,
+                feature_file_path=str(feat_file),
+                scenarios=scenarios or [f"Verify {title}"],
+                spec_checksum=checksum,
+                trello_card_id=card_id,
+                status="READY_FOR_DEV",
+            )
+            self.graph_store.upsert_node(feat_node)
+
+        card_desc = CardParser.render_card_template(
+            feature_id=feature_id,
+            title=title,
+            problem_id=problem_id,
+            spec_id=spec_id,
+            problem_context=problem_context,
+            system_design=system_design,
+            feature_file_path=str(feat_file),
+            scenarios=scenarios or [f"Verify {title}"],
+            spec_sha256=checksum,
+        )
+        card = KanbanCard(
+            card_id=card_id,
+            feature_id=feature_id,
+            title=f"[{feature_id}] {title}",
+            description=card_desc,
+            column=target_column,
+            labels=["spec-driven", task_id],
+            last_modified_by="agy",
+            task_id=task_id,
+        )
+        if isinstance(kanban_adapter, TrelloKanbanAdapter):
+            sync_info = kanban_adapter.sync_card_to_trello_remote(card)
+            final_card_id = str(sync_info["card_id"])
+            final_card_url = str(sync_info["url"])
+        else:
+            saved_card = kanban_adapter.upsert_card(card)
+            final_card_id = saved_card.card_id
+            final_card_url = saved_card.url
+
+        task_dir = self.init_task_ledger(
+            task_id=task_id,
+            description=title,
+            date_str=date_str,
+            problem_id=problem_id,
+            spec_id=spec_id,
+            feature_ids=[feature_id],
+            trello_card_id=final_card_id,
+            trello_card_url=final_card_url,
+        )
+
+        # Update FeatureNode if remote Trello card ID changed
+        if self.graph_store is not None:
+            fnode = self.graph_store.get_node(feature_id)
+            if isinstance(fnode, FeatureNode):
+                fnode.trello_card_id = final_card_id
+                self.graph_store.upsert_node(fnode)
+
+        return {
+            "task_id": task_id,
+            "feature_id": feature_id,
+            "task_dir": str(task_dir),
+            "feature_file": str(feat_file),
+            "spec_sha256": checksum,
+            "trello_card_id": final_card_id,
+            "trello_card_url": final_card_url,
+            "column": target_column,
+        }
+
+    def link_existing_task_to_trello(
+        self,
+        task_id: str,
+        feature_id: str,
+        trello_card_id: str,
+        trello_card_url: Optional[str] = None,
+    ) -> Path:
+        """Links an existing Task Ledger folder and Graph nodes to a Trello card ID."""
+        task_dir = self._find_task_dir(task_id)
+        readme_path = task_dir / "README.md"
+        url_val = trello_card_url or f"https://trello.com/c/{trello_card_id}"
+
+        if readme_path.exists():
+            text = readme_path.read_text(encoding="utf-8")
+            text = re.sub(
+                r'trello_card_id:\s*"[^"]*"',
+                f'trello_card_id: "{trello_card_id}"',
+                text,
+            )
+            text = re.sub(
+                r'trello_card_url:\s*"[^"]*"',
+                f'trello_card_url: "{url_val}"',
+                text,
+            )
+            readme_path.write_text(text, encoding="utf-8")
+
+        if self.graph_store is not None:
+            tnode = self.graph_store.get_node(task_id)
+            if isinstance(tnode, TaskJournalNode):
+                tnode.trello_card_id = trello_card_id
+                tnode.metadata["trello_card_url"] = url_val
+                self.graph_store.upsert_node(tnode)
+            fnode = self.graph_store.get_node(feature_id)
+            if isinstance(fnode, FeatureNode):
+                fnode.trello_card_id = trello_card_id
+                self.graph_store.upsert_node(fnode)
+                self.graph_store.add_edge(feature_id, task_id, EdgeType.LOGGED_IN)
+
+        return readme_path
 
     def append_step_output(
         self,

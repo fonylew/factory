@@ -1,0 +1,11 @@
+# Enterprise Multi-Agent Spec-Driven Software Factory — Agent Rules (`AGENTS.md`)
+
+All AI agents (`agy` with Gemini 4 Argon, `pi`, or subagents) operating in this repository MUST follow these non-negotiable rules:
+
+1. **Spec & Graph First (`INV-01`)**: Never implement a feature without a registered `ProblemNode`, `SystemSpecNode`, `FeatureNode` (`specs/features/FEAT-XXX.feature`), and `TaskJournalNode` (`specs/tasks/YYYY-MM-DD_TASK-XXX_<slug>/`). Use `uv run factory task create` (or MCP tool `factory_task_create_and_link`) to initialize and link them with Trello.
+2. **Read-Only Spec Lock for Coding Agents (`INV-02`)**: Coding agents (`pi`) MUST NEVER modify files inside `specs/` or `factory.yaml`. Any modification triggers `SPEC_TAMPERING_DETECTED` and aborts Pull Request creation.
+3. **Isolated Worktree & Zero Secrets (`INV-03`)**: Coding execution MUST happen inside isolated git worktrees (`worktrees/feat-FEAT-XXX`) managed by `uv run factory run-pi FEAT-XXX`.
+4. **Trello Kanban Governance (`INV-04`)**: Every Trello card must include all 5 mandatory sections (`## 1. Problem Context & Goal` through `## 5. Human Decision`). When blocked on a design decision, escalate to `2. Need Decision` via `uv run factory trello ask-decision` and read the Tech Lead's response from `3. Human Decision` via `uv run factory sync`.
+5. **Security & Production Audit (`INV-05`)**: Every code change must pass `uv run factory audit FEAT-XXX <file>` (checking for hardcoded secrets, missing HTTP timeouts, SQLi, unsafe deserialization, and swallowed exceptions) and `uv run --extra dev pytest -v`.
+6. **Step-by-Step Task Ledger (`INV-06`)**: Record all steps (`01-grill-me-conversation.md` through `05-agy-security-pr-review.md`, plus `06-formal-verification-proofs.md` when formal verification applies) inside the task's `specs/tasks/` folder.
+7. **Formal Verification Trust Boundary (`INV-07`)**: LLM Spec-writer, Reviewer, and Prover-team outputs are UNTRUSTED. `Spec.lean` is trusted ONLY after Human Approval + SHA-256 lock; `CodeModel.lean` is locked read-only; and `Proofs.lean` MUST pass the deterministic `FormalGatekeeper` with zero `sorry`, `admit`, `axiom`, `opaque`, `unsafe`, `implemented_by`, `extern`, or `native_decide`.

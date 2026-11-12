@@ -25,3 +25,6 @@ Activate this skill when reviewing Pull Requests or code changes in `6. PR & Sec
 4. **Dual-Track Issue Emission & Task Ledger**:
    - Record every finding as an `IssueNode` (`ISS-XXX`) in the Traceability Graph AND sync to the Trello Kanban `Issues & Security Findings` column + PR comments.
    - Write the full review output to `specs/tasks/<YYYY-MM-DD>_<TASK-ID>_<slug>/05-agy-security-pr-review.md`.
+5. **Formal Verification & Gatekeeper Audit (When `FormalSpecNode` Exists)**:
+   - Activate `formal-software-verification` rules and verify `FormalGatekeeper` passed (`TheoremProofNode.gatekeeper_status == "VERIFIED"`).
+   - Confirm `Spec.lean` was human-approved (`trusted == True`), SHA-256 hashes of `Spec.lean` and `CodeModel.lean` are intact, and `Proofs.lean` has zero forbidden escape hatches (`sorry`, `admit`, `axiom`, `unsafe`, `native_decide`).

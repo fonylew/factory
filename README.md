@@ -21,33 +21,54 @@ An enterprise-grade, spec-driven multi-agent software factory designed for **Tec
   *(Plus `Issues & Security Findings` for dual-tracked security/production issues).*
 - **Step-by-Step Task Conversation & Design Ledger (`specs/tasks/`)**: Every task maintains a Git-versioned folder `specs/tasks/<YYYY-MM-DD>_<TASK-ID>_<slug>/` containing `README.md` and step outputs (`01-grill-me-conversation.md` through `05-agy-security-pr-review.md`) with automatic secret redaction.
 - **Role & Privilege Separation (`agy` vs `pi`)**:
-  - **`agy` (Gemini 4 Argon)**: Runs `/grill-me`, writes specs & `.feature` files, manages Trello decisions, and audits PRs for STRIDE security flaws and production failure modes.
+  - **`agy` (Gemini 4 Argon / Carbon)**: Runs `/grill-me`, writes specs & `.feature` files, manages Trello decisions, and audits PRs for STRIDE security flaws and production failure modes.
   - **`pi`**: Runs in isolated Git worktrees (`worktrees/feat-XXX`) with all tokens/secrets scrubbed from its environment.
+- **3-Stage Agentic Formal Verification Framework (`src/factory/formal/`)**:
+  1. **`1 Specification`**: Untrusted Spec-writer & Reviewer agents draft `Spec.lean` from research papers; elevated to **Trusted** (SHA-256 locked) only after Human Approval via Trello `Need Decision` $\rightarrow$ `Human Decision`.
+  2. **`2 Code`**: Compiles/lifts Rust or systems code (`rustc --emit=asm`) into compiled machine instructions running on a **Trusted Lean Processor Model** (`CodeModel.lean`).
+  3. **`3 Proof`**: Multi-agent **Prover team** synthesizes proofs against a deterministic **Gatekeeper** (`FormalGatekeeper`) that bans `sorry`, `admit`, `axiom`, `unsafe`, and `native_decide`, certifying **`TheoremProofNode`** (`THM-XXX`).
 
 ---
 
-## 2. Quickstart & User Interaction
+## 2. Quickstart & User / Agent Interaction
 
 ```bash
-# 1. Initialize the Traceability Graph, Kanban Board, and deterministic exports
+# 1. Install the Software Factory Skills & MCP Server globally for agy (~/.gemini/config/)
+uv run factory setup-skills
+
+# 2. Initialize the Traceability Graph, Kanban Board, and deterministic exports
 uv run factory init
 
-# 2. View system status, graph traceability, orphan checks, and open issues
-uv run factory status
+# 3. Provision all 8 mandatory lists on your Trello Board (and optionally push existing cards)
+uv run factory trello init-board --sync-cards
 
-# 3. Start a new Task Ledger folder (records Task ID, date, description)
-uv run factory task new TASK-002 "Design payment webhook idempotency service"
+# 4. Atomically create a Task Ledger, Gherkin .feature, Graph nodes, AND linked Trello Card
+uv run factory task create \
+  --task-id TASK-003 \
+  --feature-id FEAT-008 \
+  --title "Design payment webhook idempotency service" \
+  --problem-context "Prevent duplicate webhook charges on network retries." \
+  --system-design "HMAC-SHA256 verification + SQLite WAL idempotency key with 10s timeout." \
+  --scenario "Rejecting duplicate webhook delivery"
 
-# 4. Append a step output (e.g., from Grill-Me or System Analysis)
-uv run factory task log-step TASK-002 01-grill-me-conversation "Problem statement & invariants..."
+# 5. Link an existing Task Ledger & Feature to a Trello Card ID
+uv run factory task link-trello TASK-002 FEAT-007
 
-# 5. Poll Trello '3. Human Decision' column, record ADRs, and unlock Ready for Dev
-uv run factory sync
+# 6. Escalate an architectural question to Trello '2. Need Decision'
+uv run factory trello ask-decision FEAT-008 ADR-011 "Fail-open or fail-closed on lock timeout?" \
+  -o "Option A: Fail-closed (HTTP 503)" \
+  -o "Option B: Queue to dead-letter table"
 
-# 6. Audit a file for STRIDE security & production readiness issues using agy driver
-uv run factory audit FEAT-005 src/factory/kanban/trello_client.py --task-id TASK-001
+# 7. Poll Trello '3. Human Decision' column, record ADRs, and unlock Ready for Dev
+uv run factory sync --task-id TASK-003
 
-# 7. Run the self-hosted Gherkin BDD regression suite
+# 8. Dispatch `pi` coding agent inside an isolated Git worktree (`worktrees/feat-FEAT-008`)
+uv run factory run-pi FEAT-008 --task-id TASK-003 --prompt "Implement step defs and service for FEAT-008"
+
+# 9. Audit a file for STRIDE security & production readiness issues using agy driver
+uv run factory audit FEAT-007 src/factory/installer.py --task-id TASK-002
+
+# 10. Run the self-hosted Gherkin BDD regression suite (12 scenarios across FEAT-001..FEAT-007)
 uv run --extra dev pytest -v
 ```
 

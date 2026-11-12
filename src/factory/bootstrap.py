@@ -27,8 +27,9 @@ def bootstrap_factory_graph(
     store: TraceabilityGraphStore,
     kanban: LocalKanbanAdapter,
 ) -> None:
-    """Seeds PROB-001, ADR-001, SPEC-001, TASK-001, FEAT-001..006, and CODE-001..006."""
+    """Seeds PROB-001, ADR-001, SPEC-001, TASK-001, TASK-002, FEAT-001..007, and CODE-001..007."""
     validator = GraphValidator(store)
+    kanban.init_board_lists(config.kanban.columns)
 
     # 1. Root ProblemNode
     prob = ProblemNode(
@@ -50,8 +51,8 @@ def bootstrap_factory_graph(
     )
     store.upsert_node(prob)
 
-    # 2. Foundational DecisionNode
-    adr = DecisionNode(
+    # 2. Foundational DecisionNodes
+    adr1 = DecisionNode(
         id="ADR-001",
         title="Foundational Architecture Decisions for Spec-Driven Software Factory",
         problem_id="PROB-001",
@@ -61,7 +62,19 @@ def bootstrap_factory_graph(
         decided_by="Technical Lead / System Analyst",
         trello_card_id="CARD-TASK-001",
     )
-    store.upsert_node(adr)
+    store.upsert_node(adr1)
+
+    adr10 = DecisionNode(
+        id="ADR-010",
+        title="Agent Skill Installation & Atomic Task-to-Trello Linking",
+        problem_id="PROB-001",
+        question="How should agents discover factory skills and initialize/link tasks with Trello?",
+        chosen_option="Installable software-factory skill + MCP config via `factory setup-skills` and atomic `factory task create` / `link-trello`",
+        rationale="Enables zero-friction agent discovery across sessions and atomic Task <-> Graph <-> Trello synchronization.",
+        decided_by="Technical Lead / System Analyst",
+        trello_card_id="CARD-FEAT-007",
+    )
+    store.upsert_node(adr10)
 
     # 3. Core SystemSpecNode
     spec_path = repo_root / "specs/architecture/SPEC-001-core-factory.md"
@@ -86,9 +99,10 @@ def bootstrap_factory_graph(
     )
     store.upsert_node(spec)
     store.add_edge("ADR-001", "SPEC-001", EdgeType.MODIFIES_SPEC)
+    store.add_edge("ADR-010", "SPEC-001", EdgeType.MODIFIES_SPEC)
 
-    # 4. TaskJournalNode for TASK-001
-    task_node = TaskJournalNode(
+    # 4. TaskJournalNodes for TASK-001 and TASK-002
+    task1 = TaskJournalNode(
         id="TASK-001",
         task_id="TASK-001",
         title="TASK-001: Multi-Agent Spec-Driven Software Factory Foundation",
@@ -105,16 +119,57 @@ def bootstrap_factory_graph(
         ],
         trello_card_id="CARD-TASK-001",
     )
-    store.upsert_node(task_node)
+    store.upsert_node(task1)
+
+    task2 = TaskJournalNode(
+        id="TASK-002",
+        task_id="TASK-002",
+        title="TASK-002: Agent Interaction Protocol, Installable Factory Skill & Trello Task Linking",
+        date="2026-11-05",
+        description="Agent Interaction Protocol, Installable Factory Skills, and Bidirectional Trello Task Initialization & Linking",
+        journal_dir="specs/tasks/2026-11-05_TASK-002_agent-skill-and-trello-linking",
+        problem_id="PROB-001",
+        steps_completed=[
+            "01-grill-me-conversation.md",
+            "02-system-analysis-design.md",
+            "03-human-decisions-adr.md",
+            "04-pi-execution-summary.md",
+            "05-agy-security-pr-review.md",
+        ],
+        trello_card_id="CARD-FEAT-007",
+    )
+    store.upsert_node(task2)
+
+    task3 = TaskJournalNode(
+        id="TASK-003",
+        task_id="TASK-003",
+        title="TASK-003: Agentic Formal Verification Framework & Skills",
+        date="2026-11-12",
+        description="Agentic Formal Verification Framework (Lean Spec, Machine Code Processor Model, Multi-Agent Prover Team & Trusted Gatekeeper) and Skills",
+        journal_dir="specs/tasks/2026-11-12_TASK-003_formal-verification-framework",
+        problem_id="PROB-001",
+        steps_completed=[
+            "01-grill-me-conversation.md",
+            "02-system-analysis-design.md",
+            "03-human-decisions-adr.md",
+            "04-pi-execution-summary.md",
+            "05-agy-security-pr-review.md",
+            "06-formal-verification-proofs.md",
+        ],
+        trello_card_id="CARD-FEAT-008",
+    )
+    store.upsert_node(task3)
 
     # 5. FeatureNodes & CodeArtifactNodes from specs/features/*.feature
     feature_code_map = {
-        "FEAT-001": ("src/factory/graph/validator.py", "GraphValidator"),
-        "FEAT-002": ("src/factory/graph/store.py", "TraceabilityGraphStore"),
-        "FEAT-003": ("src/factory/kanban/state_machine.py", "KanbanStateMachine"),
-        "FEAT-004": ("src/factory/git_ops/worktree.py", "WorktreeManager"),
-        "FEAT-005": ("src/factory/analyzer/security_scanner.py", "EnterpriseSecurityAndProdAnalyzer"),
-        "FEAT-006": ("src/factory/journal/task_ledger.py", "TaskLedgerManager"),
+        "FEAT-001": ("src/factory/graph/validator.py", "GraphValidator", "TASK-001"),
+        "FEAT-002": ("src/factory/graph/store.py", "TraceabilityGraphStore", "TASK-001"),
+        "FEAT-003": ("src/factory/kanban/state_machine.py", "KanbanStateMachine", "TASK-001"),
+        "FEAT-004": ("src/factory/git_ops/worktree.py", "WorktreeManager", "TASK-001"),
+        "FEAT-005": ("src/factory/analyzer/security_scanner.py", "EnterpriseSecurityAndProdAnalyzer", "TASK-001"),
+        "FEAT-006": ("src/factory/journal/task_ledger.py", "TaskLedgerManager", "TASK-001"),
+        "FEAT-007": ("src/factory/installer.py", "FactorySkillInstaller", "TASK-002"),
+        "FEAT-008": ("src/factory/formal/gatekeeper.py", "FormalGatekeeper", "TASK-003"),
     }
 
     features_dir = repo_root / config.project.features_dir
@@ -123,6 +178,7 @@ def bootstrap_factory_graph(
         feat_id = next((t for t in parsed.tags if t.startswith("FEAT-")), feat_file.stem[:8])
         rel_path = str(feat_file.relative_to(repo_root))
         checksum = validator.compute_file_sha256(feat_file)
+        linked_task_id = feature_code_map.get(feat_id, ("", "", "TASK-001"))[2]
 
         feat_node = FeatureNode(
             id=feat_id,
@@ -135,11 +191,11 @@ def bootstrap_factory_graph(
             status="DONE_VERIFIED",
         )
         store.upsert_node(feat_node)
-        store.add_edge(feat_id, "TASK-001", EdgeType.LOGGED_IN)
+        store.add_edge(feat_id, linked_task_id, EdgeType.LOGGED_IN)
 
         # Register corresponding CodeArtifactNode
         if feat_id in feature_code_map:
-            code_path, sym = feature_code_map[feat_id]
+            code_path, sym, _ = feature_code_map[feat_id]
             code_node = CodeArtifactNode(
                 id=f"CODE-{feat_id[-3:]}",
                 title=f"{sym} ({code_path})",
@@ -158,7 +214,7 @@ def bootstrap_factory_graph(
             problem_id="PROB-001",
             spec_id="SPEC-001",
             problem_context="Addresses PROB-001 enterprise spec-driven governance & drift prevention.",
-            system_design=f"Implemented in `{feature_code_map.get(feat_id, ('src/factory', ''))[0]}` with full STRIDE & production checks.",
+            system_design=f"Implemented in `{feature_code_map.get(feat_id, ('src/factory', '', ''))[0]}` with full STRIDE & production checks.",
             feature_file_path=rel_path,
             scenarios=parsed.scenarios,
             spec_sha256=checksum,
@@ -170,8 +226,9 @@ def bootstrap_factory_graph(
                 title=f"[{feat_id}] {parsed.feature_title}",
                 description=card_desc,
                 column=config.kanban.columns.done,
-                labels=["enterprise-spec", "verified"],
+                labels=["enterprise-spec", "verified", linked_task_id],
                 last_modified_by="agy",
+                task_id=linked_task_id,
             )
         )
 

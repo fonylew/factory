@@ -1,21 +1,29 @@
 flowchart TD
     ADR-001["ADR-001: Foundational Architecture Decisions for Spec-Driven Software Factory (DecisionNode)"]
+    ADR-010["ADR-010: Agent Skill Installation & Atomic Task-to-Trello Linking (DecisionNode)"]
     CODE-001["CODE-001: GraphValidator (src/factory/graph/validator.py) (CodeArtifactNode)"]
     CODE-002["CODE-002: TraceabilityGraphStore (src/factory/graph/store.py) (CodeArtifactNode)"]
     CODE-003["CODE-003: KanbanStateMachine (src/factory/kanban/state_machine.py) (CodeArtifactNode)"]
     CODE-004["CODE-004: WorktreeManager (src/factory/git_ops/worktree.py) (CodeArtifactNode)"]
     CODE-005["CODE-005: EnterpriseSecurityAndProdAnalyzer (src/factory/analyzer/security_scanner.py) (CodeArtifactNode)"]
     CODE-006["CODE-006: TaskLedgerManager (src/factory/journal/task_ledger.py) (CodeArtifactNode)"]
+    CODE-007["CODE-007: FactorySkillInstaller (src/factory/installer.py) (CodeArtifactNode)"]
+    CODE-008["CODE-008: FormalGatekeeper (src/factory/formal/gatekeeper.py) (CodeArtifactNode)"]
     FEAT-001["FEAT-001: Grill-Me Problem Discovery and Immutable Spec Anchoring (FeatureNode)"]
     FEAT-002["FEAT-002: Traceability Graph Traversal, Impact Analysis, and Deterministic Export (FeatureNode)"]
     FEAT-003["FEAT-003: Trello Kanban State Machine and Human-in-the-Loop Decision Flow (FeatureNode)"]
     FEAT-004["FEAT-004: Isolated Git Worktree Execution and Spec Tamper Prevention for pi (FeatureNode)"]
     FEAT-005["FEAT-005: Automated PR Review, Security Analysis, and Dual-Track Issue Tracking by agy (FeatureNode)"]
     FEAT-006["FEAT-006: Step-by-Step Task Conversation and Design Ledger Tracking (FeatureNode)"]
+    FEAT-007["FEAT-007: Installable Software Factory Skill and Atomic Task-to-Trello Initialization and Linking (FeatureNode)"]
+    FEAT-008["FEAT-008: Agentic Formal Verification Framework with Trusted Lean Spec, Machine Model, and Gatekeeper (FeatureNode)"]
     PROB-001["PROB-001: Enterprise Multi-Agent Spec-Driven Software Delivery Without Drift or Security Erosion (ProblemNode)"]
     SPEC-001["SPEC-001: Core Enterprise Multi-Agent Software Factory Specification (SystemSpecNode)"]
     TASK-001["TASK-001: TASK-001: Multi-Agent Spec-Driven Software Factory Foundation (TaskJournalNode)"]
+    TASK-002["TASK-002: TASK-002: Agent Interaction Protocol, Installable Factory Skill & Trello Task Linking (TaskJournalNode)"]
+    TASK-003["TASK-003: TASK-003: Agentic Formal Verification Framework & Skills (TaskJournalNode)"]
     ADR-001 -->|"MODIFIES_SPEC"| SPEC-001
+    ADR-010 -->|"MODIFIES_SPEC"| SPEC-001
     FEAT-001 -->|"IMPLEMENTED_BY"| CODE-001
     FEAT-001 -->|"LOGGED_IN"| TASK-001
     FEAT-002 -->|"IMPLEMENTED_BY"| CODE-002
@@ -28,12 +36,21 @@ flowchart TD
     FEAT-005 -->|"LOGGED_IN"| TASK-001
     FEAT-006 -->|"IMPLEMENTED_BY"| CODE-006
     FEAT-006 -->|"LOGGED_IN"| TASK-001
+    FEAT-007 -->|"IMPLEMENTED_BY"| CODE-007
+    FEAT-007 -->|"LOGGED_IN"| TASK-002
+    FEAT-008 -->|"IMPLEMENTED_BY"| CODE-008
+    FEAT-008 -->|"LOGGED_IN"| TASK-003
     PROB-001 -->|"GOVERNED_BY"| ADR-001
+    PROB-001 -->|"GOVERNED_BY"| ADR-010
     PROB-001 -->|"SOLVED_BY"| SPEC-001
     PROB-001 -->|"LOGGED_IN"| TASK-001
+    PROB-001 -->|"LOGGED_IN"| TASK-002
+    PROB-001 -->|"LOGGED_IN"| TASK-003
     SPEC-001 -->|"SPECIFIED_BY"| FEAT-001
     SPEC-001 -->|"SPECIFIED_BY"| FEAT-002
     SPEC-001 -->|"SPECIFIED_BY"| FEAT-003
     SPEC-001 -->|"SPECIFIED_BY"| FEAT-004
     SPEC-001 -->|"SPECIFIED_BY"| FEAT-005
     SPEC-001 -->|"SPECIFIED_BY"| FEAT-006
+    SPEC-001 -->|"SPECIFIED_BY"| FEAT-007
+    SPEC-001 -->|"SPECIFIED_BY"| FEAT-008

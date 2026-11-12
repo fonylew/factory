@@ -16,19 +16,26 @@ class NodeType(str, Enum):
     CODE_ARTIFACT = "CodeArtifactNode"
     ISSUE = "IssueNode"
     TASK_JOURNAL = "TaskJournalNode"
+    FORMAL_SPEC = "FormalSpecNode"
+    CODE_MODEL = "CodeModelNode"
+    THEOREM_PROOF = "TheoremProofNode"
 
 
 class EdgeType(str, Enum):
-    SOLVED_BY = "SOLVED_BY"                # ProblemNode -> SystemSpecNode
-    GOVERNED_BY = "GOVERNED_BY"            # ProblemNode -> DecisionNode
-    MODIFIES_SPEC = "MODIFIES_SPEC"        # DecisionNode -> SystemSpecNode
-    SPECIFIED_BY = "SPECIFIED_BY"          # SystemSpecNode -> FeatureNode
-    IMPLEMENTED_BY = "IMPLEMENTED_BY"      # FeatureNode -> CodeArtifactNode
-    DEPENDS_ON = "DEPENDS_ON"              # FeatureNode -> FeatureNode
-    LOGGED_IN = "LOGGED_IN"                # FeatureNode / ProblemNode -> TaskJournalNode
-    AFFECTS_FEATURE = "AFFECTS_FEATURE"    # IssueNode -> FeatureNode
-    DETECTED_IN = "DETECTED_IN"            # IssueNode -> CodeArtifactNode
+    SOLVED_BY = "SOLVED_BY"                  # ProblemNode -> SystemSpecNode
+    GOVERNED_BY = "GOVERNED_BY"              # ProblemNode -> DecisionNode
+    MODIFIES_SPEC = "MODIFIES_SPEC"          # DecisionNode -> SystemSpecNode
+    SPECIFIED_BY = "SPECIFIED_BY"            # SystemSpecNode -> FeatureNode
+    IMPLEMENTED_BY = "IMPLEMENTED_BY"        # FeatureNode -> CodeArtifactNode
+    DEPENDS_ON = "DEPENDS_ON"                # FeatureNode -> FeatureNode
+    LOGGED_IN = "LOGGED_IN"                  # FeatureNode / ProblemNode -> TaskJournalNode
+    AFFECTS_FEATURE = "AFFECTS_FEATURE"      # IssueNode -> FeatureNode
+    DETECTED_IN = "DETECTED_IN"              # IssueNode -> CodeArtifactNode
     VIOLATES_INVARIANT = "VIOLATES_INVARIANT"  # IssueNode -> SystemSpecNode / ProblemNode
+    FORMALIZES = "FORMALIZES"                # FormalSpecNode -> FeatureNode
+    MODELS_EXECUTION_OF = "MODELS_EXECUTION_OF"  # CodeModelNode -> FeatureNode / CodeArtifactNode
+    PROVES_THEOREM = "PROVES_THEOREM"        # TheoremProofNode -> FormalSpecNode
+    VERIFIES_MODEL = "VERIFIES_MODEL"        # TheoremProofNode -> CodeModelNode
 
 
 class IssueSeverity(str, Enum):
@@ -132,6 +139,46 @@ class TaskJournalNode(BaseGraphNode):
     problem_id: Optional[str] = None
     steps_completed: List[str] = Field(default_factory=list)
     trello_card_id: Optional[str] = None
+
+
+class FormalSpecNode(BaseGraphNode):
+    node_type: NodeType = NodeType.FORMAL_SPEC
+    feature_id: str
+    lean_spec_path: str
+    paper_references: List[str] = Field(default_factory=list)
+    reviewer_critiques: List[str] = Field(default_factory=list)
+    theorem_obligations: List[str] = Field(default_factory=list)
+    trusted: bool = False
+    human_approved_by: Optional[str] = None
+    spec_sha256: str = ""
+    status: str = "UNTRUSTED_DRAFT"
+
+
+class CodeModelNode(BaseGraphNode):
+    node_type: NodeType = NodeType.CODE_MODEL
+    feature_id: str
+    source_path: str
+    source_language: str = "rust"
+    target_isa: str = "lean-processor-v1"
+    lean_model_path: str
+    compiled_artifact_hash: str = ""
+    model_sha256: str = ""
+    trusted: bool = True
+    status: str = "TRUSTED_MODEL"
+
+
+class TheoremProofNode(BaseGraphNode):
+    node_type: NodeType = NodeType.THEOREM_PROOF
+    feature_id: str
+    formal_spec_id: str
+    code_model_id: str
+    proof_file_path: str
+    theorems_proved: List[str] = Field(default_factory=list)
+    prover_rounds_used: int = 1
+    prover_agents_count: int = 3
+    gatekeeper_status: str = "VERIFIED"
+    proof_sha256: str = ""
+    status: str = "VERIFIED"
 
 
 class GraphEdge(BaseModel):

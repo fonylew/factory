@@ -11,6 +11,12 @@
       "target_id": "SPEC-001"
     },
     {
+      "edge_type": "MODIFIES_SPEC",
+      "metadata": {},
+      "source_id": "ADR-010",
+      "target_id": "SPEC-001"
+    },
+    {
       "edge_type": "IMPLEMENTED_BY",
       "metadata": {},
       "source_id": "FEAT-001",
@@ -83,10 +89,40 @@
       "target_id": "TASK-001"
     },
     {
+      "edge_type": "IMPLEMENTED_BY",
+      "metadata": {},
+      "source_id": "FEAT-007",
+      "target_id": "CODE-007"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "FEAT-007",
+      "target_id": "TASK-002"
+    },
+    {
+      "edge_type": "IMPLEMENTED_BY",
+      "metadata": {},
+      "source_id": "FEAT-008",
+      "target_id": "CODE-008"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "FEAT-008",
+      "target_id": "TASK-003"
+    },
+    {
       "edge_type": "GOVERNED_BY",
       "metadata": {},
       "source_id": "PROB-001",
       "target_id": "ADR-001"
+    },
+    {
+      "edge_type": "GOVERNED_BY",
+      "metadata": {},
+      "source_id": "PROB-001",
+      "target_id": "ADR-010"
     },
     {
       "edge_type": "SOLVED_BY",
@@ -99,6 +135,18 @@
       "metadata": {},
       "source_id": "PROB-001",
       "target_id": "TASK-001"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "PROB-001",
+      "target_id": "TASK-002"
+    },
+    {
+      "edge_type": "LOGGED_IN",
+      "metadata": {},
+      "source_id": "PROB-001",
+      "target_id": "TASK-003"
     },
     {
       "edge_type": "SPECIFIED_BY",
@@ -135,12 +183,24 @@
       "metadata": {},
       "source_id": "SPEC-001",
       "target_id": "FEAT-006"
+    },
+    {
+      "edge_type": "SPECIFIED_BY",
+      "metadata": {},
+      "source_id": "SPEC-001",
+      "target_id": "FEAT-007"
+    },
+    {
+      "edge_type": "SPECIFIED_BY",
+      "metadata": {},
+      "source_id": "SPEC-001",
+      "target_id": "FEAT-008"
     }
   ],
   "nodes": [
     {
       "chosen_option": "SQLite+NetworkX Graph, 7-Column Trello State Machine, Git Worktrees for pi, Gemini 4 Argon for agy",
-      "created_at": "2026-11-04T04:19:14.331312+00:00",
+      "created_at": "2026-11-12T03:55:04.488800+00:00",
       "decided_by": "Technical Lead / System Analyst",
       "id": "ADR-001",
       "metadata": {},
@@ -154,8 +214,23 @@
       "trello_card_id": "CARD-TASK-001"
     },
     {
+      "chosen_option": "Installable software-factory skill + MCP config via `factory setup-skills` and atomic `factory task create` / `link-trello`",
+      "created_at": "2026-11-12T03:55:04.489788+00:00",
+      "decided_by": "Technical Lead / System Analyst",
+      "id": "ADR-010",
+      "metadata": {},
+      "node_type": "DecisionNode",
+      "options": [],
+      "problem_id": "PROB-001",
+      "question": "How should agents discover factory skills and initialize/link tasks with Trello?",
+      "rationale": "Enables zero-friction agent discovery across sessions and atomic Task <-> Graph <-> Trello synchronization.",
+      "status": "ACTIVE",
+      "title": "Agent Skill Installation & Atomic Task-to-Trello Linking",
+      "trello_card_id": "CARD-FEAT-007"
+    },
+    {
       "commit_sha": "",
-      "created_at": "2026-11-04T04:19:14.339003+00:00",
+      "created_at": "2026-11-12T03:55:04.495376+00:00",
       "feature_id": "FEAT-001",
       "file_path": "src/factory/graph/validator.py",
       "git_branch": "feat/FEAT-001",
@@ -169,7 +244,7 @@
     },
     {
       "commit_sha": "",
-      "created_at": "2026-11-04T04:19:14.342896+00:00",
+      "created_at": "2026-11-12T03:55:04.497438+00:00",
       "feature_id": "FEAT-002",
       "file_path": "src/factory/graph/store.py",
       "git_branch": "feat/FEAT-002",
@@ -183,7 +258,7 @@
     },
     {
       "commit_sha": "",
-      "created_at": "2026-11-04T04:19:14.346687+00:00",
+      "created_at": "2026-11-12T03:55:04.499223+00:00",
       "feature_id": "FEAT-003",
       "file_path": "src/factory/kanban/state_machine.py",
       "git_branch": "feat/FEAT-003",
@@ -197,7 +272,7 @@
     },
     {
       "commit_sha": "",
-      "created_at": "2026-11-04T04:19:14.350529+00:00",
+      "created_at": "2026-11-12T03:55:04.501165+00:00",
       "feature_id": "FEAT-004",
       "file_path": "src/factory/git_ops/worktree.py",
       "git_branch": "feat/FEAT-004",
@@ -211,7 +286,7 @@
     },
     {
       "commit_sha": "",
-      "created_at": "2026-11-04T04:19:14.354696+00:00",
+      "created_at": "2026-11-12T03:55:04.503063+00:00",
       "feature_id": "FEAT-005",
       "file_path": "src/factory/analyzer/security_scanner.py",
       "git_branch": "feat/FEAT-005",
@@ -225,7 +300,7 @@
     },
     {
       "commit_sha": "",
-      "created_at": "2026-11-04T04:19:14.358618+00:00",
+      "created_at": "2026-11-12T03:55:04.504918+00:00",
       "feature_id": "FEAT-006",
       "file_path": "src/factory/journal/task_ledger.py",
       "git_branch": "feat/FEAT-006",
@@ -238,7 +313,35 @@
       "title": "TaskLedgerManager (src/factory/journal/task_ledger.py)"
     },
     {
-      "created_at": "2026-11-04T04:19:14.336854+00:00",
+      "commit_sha": "",
+      "created_at": "2026-11-12T03:55:04.506734+00:00",
+      "feature_id": "FEAT-007",
+      "file_path": "src/factory/installer.py",
+      "git_branch": "feat/FEAT-007",
+      "id": "CODE-007",
+      "metadata": {},
+      "node_type": "CodeArtifactNode",
+      "pr_number": 7,
+      "status": "ACTIVE",
+      "symbol_name": "FactorySkillInstaller",
+      "title": "FactorySkillInstaller (src/factory/installer.py)"
+    },
+    {
+      "commit_sha": "",
+      "created_at": "2026-11-12T03:55:04.509880+00:00",
+      "feature_id": "FEAT-008",
+      "file_path": "src/factory/formal/gatekeeper.py",
+      "git_branch": "feat/FEAT-008",
+      "id": "CODE-008",
+      "metadata": {},
+      "node_type": "CodeArtifactNode",
+      "pr_number": 8,
+      "status": "ACTIVE",
+      "symbol_name": "FormalGatekeeper",
+      "title": "FormalGatekeeper (src/factory/formal/gatekeeper.py)"
+    },
+    {
+      "created_at": "2026-11-12T03:55:04.494604+00:00",
       "feature_file_path": "specs/features/FEAT-001-grill-me-spec-anchor.feature",
       "id": "FEAT-001",
       "metadata": {},
@@ -254,7 +357,7 @@
       "trello_card_id": "CARD-FEAT-001"
     },
     {
-      "created_at": "2026-11-04T04:19:14.340744+00:00",
+      "created_at": "2026-11-12T03:55:04.496683+00:00",
       "feature_file_path": "specs/features/FEAT-002-traceability-graph.feature",
       "id": "FEAT-002",
       "metadata": {},
@@ -270,7 +373,7 @@
       "trello_card_id": "CARD-FEAT-002"
     },
     {
-      "created_at": "2026-11-04T04:19:14.344530+00:00",
+      "created_at": "2026-11-12T03:55:04.498475+00:00",
       "feature_file_path": "specs/features/FEAT-003-trello-kanban-hitl.feature",
       "id": "FEAT-003",
       "metadata": {},
@@ -286,7 +389,7 @@
       "trello_card_id": "CARD-FEAT-003"
     },
     {
-      "created_at": "2026-11-04T04:19:14.348415+00:00",
+      "created_at": "2026-11-12T03:55:04.500249+00:00",
       "feature_file_path": "specs/features/FEAT-004-git-worktree-pi-sandbox.feature",
       "id": "FEAT-004",
       "metadata": {},
@@ -302,7 +405,7 @@
       "trello_card_id": "CARD-FEAT-004"
     },
     {
-      "created_at": "2026-11-04T04:19:14.352498+00:00",
+      "created_at": "2026-11-12T03:55:04.502284+00:00",
       "feature_file_path": "specs/features/FEAT-005-agy-security-pr-review.feature",
       "id": "FEAT-005",
       "metadata": {},
@@ -317,7 +420,7 @@
       "trello_card_id": "CARD-FEAT-005"
     },
     {
-      "created_at": "2026-11-04T04:19:14.356492+00:00",
+      "created_at": "2026-11-12T03:55:04.504117+00:00",
       "feature_file_path": "specs/features/FEAT-006-task-ledger-journal.feature",
       "id": "FEAT-006",
       "metadata": {},
@@ -332,8 +435,41 @@
       "trello_card_id": "CARD-FEAT-006"
     },
     {
+      "created_at": "2026-11-12T03:55:04.505949+00:00",
+      "feature_file_path": "specs/features/FEAT-007-agent-skill-and-trello-linking.feature",
+      "id": "FEAT-007",
+      "metadata": {},
+      "node_type": "FeatureNode",
+      "scenarios": [
+        "Installing the software-factory skills and MCP server configuration for agents",
+        "Atomically initializing a Task, Feature spec, and linked Trello Kanban card"
+      ],
+      "spec_checksum": "3fa8c1ed7462d460eccac5bd15599d96e161a4420383a57aa948fa764434641f",
+      "spec_id": "SPEC-001",
+      "status": "DONE_VERIFIED",
+      "title": "Installable Software Factory Skill and Atomic Task-to-Trello Initialization and Linking",
+      "trello_card_id": "CARD-FEAT-007"
+    },
+    {
+      "created_at": "2026-11-12T03:55:04.507780+00:00",
+      "feature_file_path": "specs/features/FEAT-008-formal-verification-framework.feature",
+      "id": "FEAT-008",
+      "metadata": {},
+      "node_type": "FeatureNode",
+      "scenarios": [
+        "Drafting a Lean specification with Reviewers and elevating to Trusted only after Human Approval",
+        "Lifting Rust code into a Trusted Executable Lean Processor Model",
+        "Gatekeeper rejects unsound Prover Team proofs with sorry or axioms and certifies sound proofs"
+      ],
+      "spec_checksum": "2d07daa4bb80b795c4ce4eb1a77c159f1d2eb49c51513ac5ef55e4da7c45f411",
+      "spec_id": "SPEC-001",
+      "status": "DONE_VERIFIED",
+      "title": "Agentic Formal Verification Framework with Trusted Lean Spec, Machine Model, and Gatekeeper",
+      "trello_card_id": "CARD-FEAT-008"
+    },
+    {
       "business_impact": "Eliminates unreviewed security flaws and specification drift in agentic delivery.",
-      "created_at": "2026-11-04T04:19:14.330543+00:00",
+      "created_at": "2026-11-12T03:55:04.485928+00:00",
       "id": "PROB-001",
       "invariants": [
         "INV-01: Every FeatureNode and CodeArtifactNode must link to an active ProblemNode.",
@@ -352,7 +488,7 @@
     {
       "architecture_md": "specs/architecture/SPEC-001-core-factory.md",
       "component": "factory-core",
-      "created_at": "2026-11-04T04:19:14.333051+00:00",
+      "created_at": "2026-11-12T03:55:04.490703+00:00",
       "id": "SPEC-001",
       "metadata": {},
       "nfrs": [
@@ -372,7 +508,7 @@
       "version_hash": "2b0c1d17abfc95b08d9ce6d7ded243968d66693a34cb9afa6540333fcbfcb455"
     },
     {
-      "created_at": "2026-11-04T04:19:14.335119+00:00",
+      "created_at": "2026-11-12T03:55:04.491485+00:00",
       "date": "2026-11-01",
       "description": "Grill-Me Problem Discovery, Enterprise Architecture Design, and Self-Hosting Foundation",
       "id": "TASK-001",
@@ -391,6 +527,49 @@
       "task_id": "TASK-001",
       "title": "TASK-001: Multi-Agent Spec-Driven Software Factory Foundation",
       "trello_card_id": "CARD-TASK-001"
+    },
+    {
+      "created_at": "2026-11-12T03:55:04.492200+00:00",
+      "date": "2026-11-05",
+      "description": "Agent Interaction Protocol, Installable Factory Skills, and Bidirectional Trello Task Initialization & Linking",
+      "id": "TASK-002",
+      "journal_dir": "specs/tasks/2026-11-05_TASK-002_agent-skill-and-trello-linking",
+      "metadata": {},
+      "node_type": "TaskJournalNode",
+      "problem_id": "PROB-001",
+      "status": "ACTIVE",
+      "steps_completed": [
+        "01-grill-me-conversation.md",
+        "02-system-analysis-design.md",
+        "03-human-decisions-adr.md",
+        "04-pi-execution-summary.md",
+        "05-agy-security-pr-review.md"
+      ],
+      "task_id": "TASK-002",
+      "title": "TASK-002: Agent Interaction Protocol, Installable Factory Skill & Trello Task Linking",
+      "trello_card_id": "CARD-FEAT-007"
+    },
+    {
+      "created_at": "2026-11-12T03:55:04.492907+00:00",
+      "date": "2026-11-12",
+      "description": "Agentic Formal Verification Framework (Lean Spec, Machine Code Processor Model, Multi-Agent Prover Team & Trusted Gatekeeper) and Skills",
+      "id": "TASK-003",
+      "journal_dir": "specs/tasks/2026-11-12_TASK-003_formal-verification-framework",
+      "metadata": {},
+      "node_type": "TaskJournalNode",
+      "problem_id": "PROB-001",
+      "status": "ACTIVE",
+      "steps_completed": [
+        "01-grill-me-conversation.md",
+        "02-system-analysis-design.md",
+        "03-human-decisions-adr.md",
+        "04-pi-execution-summary.md",
+        "05-agy-security-pr-review.md",
+        "06-formal-verification-proofs.md"
+      ],
+      "task_id": "TASK-003",
+      "title": "TASK-003: Agentic Formal Verification Framework & Skills",
+      "trello_card_id": "CARD-FEAT-008"
     }
   ]
 }

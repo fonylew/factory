@@ -11,9 +11,11 @@ import networkx as nx
 from factory.graph.models import (
     BaseGraphNode,
     CodeArtifactNode,
+    CodeModelNode,
     DecisionNode,
     EdgeType,
     FeatureNode,
+    FormalSpecNode,
     GraphEdge,
     IssueNode,
     IssueStatus,
@@ -21,6 +23,7 @@ from factory.graph.models import (
     ProblemNode,
     SystemSpecNode,
     TaskJournalNode,
+    TheoremProofNode,
 )
 
 NODE_MODEL_MAP: Dict[NodeType, Type[BaseGraphNode]] = {
@@ -31,6 +34,9 @@ NODE_MODEL_MAP: Dict[NodeType, Type[BaseGraphNode]] = {
     NodeType.CODE_ARTIFACT: CodeArtifactNode,
     NodeType.ISSUE: IssueNode,
     NodeType.TASK_JOURNAL: TaskJournalNode,
+    NodeType.FORMAL_SPEC: FormalSpecNode,
+    NodeType.CODE_MODEL: CodeModelNode,
+    NodeType.THEOREM_PROOF: TheoremProofNode,
 }
 
 
@@ -120,6 +126,17 @@ class TraceabilityGraphStore:
         elif isinstance(node, TaskJournalNode) and node.problem_id:
             if self.get_node(node.problem_id):
                 self.add_edge(node.problem_id, node.id, EdgeType.LOGGED_IN)
+        elif isinstance(node, FormalSpecNode) and node.feature_id:
+            if self.get_node(node.feature_id):
+                self.add_edge(node.feature_id, node.id, EdgeType.FORMALIZES)
+        elif isinstance(node, CodeModelNode) and node.feature_id:
+            if self.get_node(node.feature_id):
+                self.add_edge(node.feature_id, node.id, EdgeType.MODELS_EXECUTION_OF)
+        elif isinstance(node, TheoremProofNode):
+            if node.formal_spec_id and self.get_node(node.formal_spec_id):
+                self.add_edge(node.formal_spec_id, node.id, EdgeType.PROVES_THEOREM)
+            if node.code_model_id and self.get_node(node.code_model_id):
+                self.add_edge(node.code_model_id, node.id, EdgeType.VERIFIES_MODEL)
 
     def add_edge(
         self,

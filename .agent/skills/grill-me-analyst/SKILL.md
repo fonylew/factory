@@ -20,3 +20,6 @@ Activate this skill whenever a Technical Lead or System Analyst starts a new ini
    - `02-system-analysis-design.md`
    - `03-human-decisions-adr.md`
 5. **Trello Human-in-the-Loop Escalation**: If an architectural trade-off requires human sign-off, format options clearly under `## 4. Open Questions / Need Decision` and transition the Trello card to `2. Need Decision`. Wait for the Tech Lead to populate `## 5. Human Decision` and move the card to `3. Human Decision`.
+6. **Formal Verification Triage (High-Assurance / Cryptographic / Protocol Features)**:
+   - Ask whether the component requires mathematical proof via the **`formal-software-verification`** skill (e.g., cryptographic primitives, state-machine invariants, parser/token validators, Rust systems code).
+   - If yes, collect reference research papers/RFCs and initiate Stage 1 (`factory formal init-spec`) so the Lean spec (`Spec.lean`) is reviewed and human-approved on Trello before proof synthesis.
